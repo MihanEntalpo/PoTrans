@@ -1,0 +1,4 @@
+recursive-include PoTrans *.py
+include potrans
+include LICENSE
+exclude setup.py
