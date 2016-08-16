@@ -1,5 +1,6 @@
 import os
 import click
+import polib
 from .potrans import Translator
 from .potrans import YandexTranslateException
 
@@ -66,11 +67,14 @@ def translate(
 
 
 @cli.command(help="Convert source *.po file to *.mo")
-@click.option("--input_po", "-i", type=click.File("r"), help="Input *.po file to open")
-@click.option("--output_mo", "-o", type=click.File("w"), help="Output *.mo file to write to")
+@click.option("--input_po", "-i", type=click.Path(exists=True), help="Input *.po file to open")
+@click.option("--output_mo", "-o", type=click.Path(writable=True), help="Output *.mo file to write to")
 def convert(input_po, output_mo):
-    t = Translator("", None, None, input_po)
-    t.save_mo_file(output_mo)
+    print("Reading PO file " + input_po)
+    p = polib.pofile(input_po)
+    print("Writing MO file " + output_mo)
+    p.save_as_mofile(output_mo)
+    print("Done")
 
 
 def get_key_from_conffile(filename="~/.config/potrans.key"):

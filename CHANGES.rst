@@ -1,5 +1,7 @@
 Change Log
 ==========
+0.1.6 - Changed cli, so, yandex_api key no longer needed to convert *.po to *.mo
+        Added cli.py script to run package cli interface in development
 
 0.1.5 - Added changelogs to a package info
 
