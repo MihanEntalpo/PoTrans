@@ -1,3 +1,4 @@
+#!/bin/bash
 FILE="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 DIR=`dirname $FILE`
 cd $DIR

@@ -1,5 +1,6 @@
 import polib
 import io
+import re
 from yandex_translate import YandexTranslate, YandexTranslateException
 
 class Translator:
@@ -32,6 +33,16 @@ class Translator:
             po_filename = po_filename.name
         self.po = polib.pofile(po_filename)
 
+    def re_match(self, expr, text, groupdict=None):
+        res = re.match(expr, text)
+        if groupdict is not None:
+            assert isinstance(groupdict, dict)
+            groupdict.clear()
+            if res is not None:
+                for key in res.groupdict():
+                    groupdict[key] = res.groupdict()[key]
+        return res
+
     def _translate_str(self, text, src_lang, dest_lang, return_src_if_empty_result=True, need_print=False):
         """
         Перевести текстовую строку (приватный метод)
@@ -42,15 +53,33 @@ class Translator:
         :param need_print: Выводить на экран информацию о результате перевода (для отладки)
         :return: переведённая строка (или исходная, если перевод не найден, и return_src_if_empty_result==True)
         """
+        if not text.strip():
+            return ""
+
+        match_dict = {}
+        replacers = {}
+        while self.re_match("(?P<pattern>(%[sd]|&[a-z]+;|%[0-9]+))", text, match_dict):
+            r = "@" + str(len(replacers) + 1)
+            s = match_dict["pattern"]
+            replacers[r] = s
+            text = str(text).replace(s, r, 1)
+
         tr = self.yandex_translate.translate(text, "{}-{}".format(self.src_lang, self.dest_lang))
         if tr['code'] == 200 and len(tr['text']) and tr['text'][0]:
             tr_text = tr['text'][0]
         else:
             tr_text = ""
-        if need_print:
-            print(text + " => " + tr_text)
+
         if not tr_text and return_src_if_empty_result:
             tr_text = text
+
+        if len(replacers) > 0:
+            for r, s in replacers.items():
+                tr_text = tr_text.replace(r, s)
+
+        if need_print:
+            print(text + " => " + tr_text)
+
         return tr_text
 
     def go_translate(self, src_lang=None, dest_lang=None, debug=False, usemsgid=False, **kwargs):
